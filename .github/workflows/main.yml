@@ -1,70 +1,54 @@
-name: Android CI
+name: Android
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
-      - master
-  pull_request:
-  workflow_dispatch:
-
-permissions:
-  contents: read
 
 jobs:
+
   build:
 
     runs-on: ubuntu-latest
 
-    timeout-minutes: 60
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
 
-      - name: Setup JDK 21
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
           cache: gradle
 
-      - name: Grant execute permission
-        run: chmod +x gradlew
+      - uses: android-actions/setup-android@v3
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept SDK Licenses
-        run: yes | sdkmanager --licenses
-
-      - name: Install SDK Packages
+      - name: Install SDK
         run: |
+          yes | sdkmanager --licenses
+
           sdkmanager \
-            "platform-tools" \
-            "platforms;android-35" \
-            "build-tools;35.0.0"
+          "platform-tools" \
+          "platforms;android-35" \
+          "build-tools;35.0.0"
 
-      - name: Build Leanback Release
+      - run: chmod +x gradlew
+
+      - name: Check Gradle
         run: |
-          ./gradlew \
-          :app:assembleLeanbackRelease \
-          --stacktrace
+          ./gradlew --version
+          ./gradlew projects
+          ./gradlew :app:dependencies
 
-      - name: Build Mobile Release
+      - name: Build
         run: |
-          ./gradlew \
-          :app:assembleMobileRelease \
-          --stacktrace
+          ./gradlew assembleRelease \
+          --stacktrace \
+          --info
 
-      - name: Upload Leanback APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
+        if: success()
         with:
-          name: Leanback-Release
-          path: app/build/outputs/apk/leanback/release/*.apk
-
-      - name: Upload Mobile APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Mobile-Release
-          path: app/build/outputs/apk/mobile/release/*.apk
+          name: apk
+          path: app/build/outputs/apk/**/*.apk
