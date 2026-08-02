@@ -54,13 +54,15 @@ android {
     }
 
     signingConfigs {
-        release {
+    release {
+        if (localFile.exists()) {
             storeFile file(localProps['storeFile'])
             keyAlias localProps['keyAlias']
-            keyPassword localProps['storePassword']
+            keyPassword localProps['keyPassword']
             storePassword localProps['storePassword']
         }
     }
+}
 
     buildTypes {
         release {
