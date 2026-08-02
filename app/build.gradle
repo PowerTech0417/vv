@@ -65,13 +65,20 @@ android {
 }
 
     buildTypes {
-        release {
-            minifyEnabled = true
-            shrinkResources = true
-            signingConfig = signingConfigs.release
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro', 'proguard-rules-media.pro'
+    release {
+        minifyEnabled true
+        shrinkResources true
+
+        if (localFile.exists()) {
+            signingConfig signingConfigs.release
         }
+
+        proguardFiles getDefaultProguardFile(
+                'proguard-android-optimize.txt'),
+                'proguard-rules.pro',
+                'proguard-rules-media.pro'
     }
+}
 
     configurations.configureEach {
         exclude group: 'stax', module: 'stax-api'
